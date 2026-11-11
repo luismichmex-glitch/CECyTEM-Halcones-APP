@@ -1,4 +1,4 @@
-# ⚽ Club Halcones CECYTEM 33 Capula — Plataforma Deportiva Integral (`Futbol-Prueba`)
+# ⚽ Club Halcones CECYTEM 33 Capula — Plataforma Deportiva Integral (`CECyTEM-Halcones-APP`)
 
 Aplicación móvil e híbrida de alto rendimiento desarrollada para la gestión táctica, financiera y deportiva del **Club Deportivo Halcones del CECYTEM 33 Capula** (Michoacán, México), bajo la dirección técnica del D.T. Luis Manuel Martínez.
 
