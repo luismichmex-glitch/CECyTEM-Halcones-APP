@@ -186,3 +186,142 @@ export async function deleteAlineacion(id) {
   if (error) throw error;
   return true;
 }
+
+const LOCAL_STORAGE_JUGADAS = 'halcones_jugadas_tacticas_local_v1';
+
+function getLocalJugadas() {
+  try {
+    const raw = localStorage.getItem(LOCAL_STORAGE_JUGADAS);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveLocalJugadas(list) {
+  try {
+    localStorage.setItem(LOCAL_STORAGE_JUGADAS, JSON.stringify(list));
+  } catch {}
+}
+
+/**
+ * Obtener lista de jugadas tácticas desde Supabase (con respaldo local)
+ */
+export async function fetchJugadasTacticas(categoria = null, rama = null) {
+  try {
+    let query = supabase.from('jugadas_tacticas').select('*');
+    if (categoria && categoria !== 'Todas') {
+      query = query.eq('categoria', categoria);
+    }
+    if (rama && rama !== 'Todas') {
+      query = query.eq('rama', rama);
+    }
+    const { data, error } = await query.order('created_at', { ascending: false });
+    if (error) throw error;
+    if (Array.isArray(data)) {
+      saveLocalJugadas(data);
+      return data;
+    }
+  } catch (err) {
+    console.warn('fetchJugadasTacticas: error en Supabase, usando respaldo local:', err);
+  }
+  return getLocalJugadas();
+}
+
+/**
+ * Crear jugada táctica en Supabase
+ */
+export async function createJugadaTactica(jugada) {
+  const payload = {
+    titulo: String(jugada.titulo || 'Nueva Jugada').trim(),
+    categoria: String(jugada.categoria || 'Ejercicio').trim(),
+    rama: String(jugada.rama || 'General').trim(),
+    cancha_tipo: String(jugada.cancha_tipo || 'Completa').trim(),
+    frames: Array.isArray(jugada.frames) ? jugada.frames : [],
+    notas_entrenador: String(jugada.notas_entrenador || jugada.notas || '').trim(),
+  };
+
+  try {
+    const { data, error } = await supabase
+      .from('jugadas_tacticas')
+      .insert([payload])
+      .select();
+
+    if (error) throw error;
+    if (data?.[0]) {
+      const local = getLocalJugadas();
+      saveLocalJugadas([data[0], ...local]);
+      return data[0];
+    }
+  } catch (err) {
+    console.warn('createJugadaTactica: error en Supabase, guardando localmente:', err);
+  }
+
+  // Respaldo local si Supabase no está disponible
+  const offlineItem = {
+    id: 'local-' + Date.now(),
+    ...payload,
+    created_at: new Date().toISOString(),
+  };
+  const local = getLocalJugadas();
+  saveLocalJugadas([offlineItem, ...local]);
+  return offlineItem;
+}
+
+/**
+ * Actualizar jugada táctica existente
+ */
+export async function updateJugadaTactica(id, jugada) {
+  const payload = {
+    titulo: String(jugada.titulo || 'Jugada').trim(),
+    categoria: String(jugada.categoria || 'Ejercicio').trim(),
+    rama: String(jugada.rama || 'General').trim(),
+    cancha_tipo: String(jugada.cancha_tipo || 'Completa').trim(),
+    frames: Array.isArray(jugada.frames) ? jugada.frames : [],
+    notas_entrenador: String(jugada.notas_entrenador || jugada.notas || '').trim(),
+  };
+
+  try {
+    if (!id.startsWith('local-')) {
+      const { data, error } = await supabase
+        .from('jugadas_tacticas')
+        .update(payload)
+        .eq('id', id)
+        .select();
+
+      if (error) throw error;
+      if (data?.[0]) {
+        const local = getLocalJugadas().map((item) => (item.id === id ? data[0] : item));
+        saveLocalJugadas(local);
+        return data[0];
+      }
+    }
+  } catch (err) {
+    console.warn('updateJugadaTactica: error en Supabase, actualizando respaldo local:', err);
+  }
+
+  // Actualizar en local
+  const updatedItem = { id, ...payload, updated_at: new Date().toISOString() };
+  const local = getLocalJugadas().map((item) => (item.id === id ? updatedItem : item));
+  saveLocalJugadas(local);
+  return updatedItem;
+}
+
+/**
+ * Eliminar jugada táctica por ID
+ */
+export async function deleteJugadaTactica(id) {
+  try {
+    if (!id.startsWith('local-')) {
+      const { error } = await supabase.from('jugadas_tacticas').delete().eq('id', id);
+      if (error) throw error;
+    }
+  } catch (err) {
+    console.warn('deleteJugadaTactica: error en Supabase, borrando local:', err);
+  }
+
+  const local = getLocalJugadas().filter((item) => item.id !== id);
+  saveLocalJugadas(local);
+  return true;
+}
+

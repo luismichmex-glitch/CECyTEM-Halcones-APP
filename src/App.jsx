@@ -11,6 +11,7 @@ import {
 } from './modules/finanzas';
 import { PlantillaScreen } from './modules/plantilla';
 import { PizarraScreen } from './modules/alineaciones';
+import { LaboratorioTacticoScreen } from './modules/tactica';
 
 
 const STORAGE_KEY = 'halcones_cecytem33_finanzas_v2';
@@ -308,6 +309,14 @@ export default function App() {
 
       {activeTab === 'pizarra' && (
         <PizarraScreen
+          onRefreshGlobal={() => handleRefresh(false)}
+          isSyncingGlobal={isSyncing}
+          syncStatus={syncStatus}
+        />
+      )}
+
+      {activeTab === 'tactica' && (
+        <LaboratorioTacticoScreen
           onRefreshGlobal={() => handleRefresh(false)}
           isSyncingGlobal={isSyncing}
           syncStatus={syncStatus}
