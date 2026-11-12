@@ -1,0 +1,24 @@
+{
+  "name": "Halcones Finanzas - CECYTEM 33 Capula",
+  "short_name": "Halcones",
+  "description": "Aplicación oficial del Club Halcones CECYTEM 33 Capula: Finanzas, Plantilla Oficial y Pizarra Táctica.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#07131e",
+  "theme_color": "#07131e",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

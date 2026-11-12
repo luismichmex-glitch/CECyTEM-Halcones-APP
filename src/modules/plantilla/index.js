@@ -31,3 +31,6 @@ export function filterRosterByRama(plantilla, rama = RAMAS.FEMENIL) {
   }
   return plantilla[rama] || [];
 }
+
+export { default as PlantillaScreen } from './PlantillaScreen';
+

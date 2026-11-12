@@ -15,3 +15,6 @@ export function getUpcomingMatches(matches = []) {
     .filter((m) => m.fecha >= today)
     .sort((a, b) => a.fecha.localeCompare(b.fecha));
 }
+
+export { default as PizarraScreen } from '../alineaciones/PizarraScreen';
+

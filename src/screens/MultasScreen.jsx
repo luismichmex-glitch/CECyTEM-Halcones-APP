@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import TopAppBar from '../components/TopAppBar';
 import { normalizeDateToIso } from '../services/googleSheets';
+import { getJugadores } from '../services/supabaseClient';
 
 const MOTIVOS = [
   {
@@ -61,8 +62,50 @@ export default function MultasScreen({
   const todayIso = new Date().toISOString().split('T')[0];
   const [fecha, setFecha] = useState(todayIso);
   const [rama, setRama] = useState('Femenil');
-  const currentRoster =
-    (rama === 'Femenil' ? plantilla?.Femenil : plantilla?.Varonil) || [];
+
+  // Jugadores desde Supabase con fallback a Google Sheets
+  const [supabaseJugadores, setSupabaseJugadores] = useState({
+    Femenil: [],
+    Varonil: [],
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchPlayers() {
+      try {
+        const [fem, varo] = await Promise.all([
+          getJugadores('Femenil'),
+          getJugadores('Varonil'),
+        ]);
+        if (isMounted) {
+          setSupabaseJugadores({
+            Femenil: fem || [],
+            Varonil: varo || [],
+          });
+        }
+      } catch (err) {
+        console.warn('MultasScreen: usando fallback de Google Sheets para plantilla:', err);
+      }
+    }
+    fetchPlayers();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const getRosterForRama = useMemo(
+    () => (targetRama) => {
+      const sbList =
+        targetRama === 'Femenil'
+          ? supabaseJugadores.Femenil
+          : supabaseJugadores.Varonil;
+      if (sbList && sbList.length > 0) return sbList;
+      return (targetRama === 'Femenil' ? plantilla?.Femenil : plantilla?.Varonil) || [];
+    },
+    [supabaseJugadores, plantilla]
+  );
+
+  const currentRoster = getRosterForRama(rama);
 
   const [selectedPlayerIndex, setSelectedPlayerIndex] = useState(0);
   const [motivo, setMotivo] = useState('Inasistencia');
@@ -86,8 +129,7 @@ export default function MultasScreen({
       const normDate = normalizeDateToIso(editingItem.fecha) || todayIso;
       setFecha(normDate);
 
-      const roster =
-        (itemRama === 'Femenil' ? plantilla?.Femenil : plantilla?.Varonil) || [];
+      const roster = getRosterForRama(itemRama);
       const pIdx = roster.findIndex(
         (p) =>
           String(p.dorsal) === String(editingItem.dorsal) ||
@@ -130,8 +172,7 @@ export default function MultasScreen({
       const itemRama = m.rama || 'Femenil';
       setRama(itemRama);
       setFecha(normalizeDateToIso(m.fecha) || todayIso);
-      const roster =
-        (itemRama === 'Femenil' ? plantilla?.Femenil : plantilla?.Varonil) || [];
+      const roster = getRosterForRama(itemRama);
       const pIdx = roster.findIndex(
         (p) =>
           String(p.dorsal) === String(m.dorsal) ||

@@ -9,6 +9,9 @@ import {
   fetchHalconesData,
   postHalconesRecord,
 } from './modules/finanzas';
+import { PlantillaScreen } from './modules/plantilla';
+import { PizarraScreen } from './modules/alineaciones';
+
 
 const STORAGE_KEY = 'halcones_cecytem33_finanzas_v2';
 
@@ -291,6 +294,23 @@ export default function App() {
           onCancelEdit={handleCancelEdit}
           onEditItem={(item) => handleStartEdit('GASTO', item)}
           onDeleteItem={(rowIndex) => handleDeleteRecord({ tipo: 'GASTO', rowIndex })}
+        />
+      )}
+
+      {activeTab === 'plantilla' && (
+        <PlantillaScreen
+          plantilla={appState.plantilla}
+          onRefreshGlobal={() => handleRefresh(false)}
+          isSyncingGlobal={isSyncing}
+          syncStatus={syncStatus}
+        />
+      )}
+
+      {activeTab === 'pizarra' && (
+        <PizarraScreen
+          onRefreshGlobal={() => handleRefresh(false)}
+          isSyncingGlobal={isSyncing}
+          syncStatus={syncStatus}
         />
       )}
 
